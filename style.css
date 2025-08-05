@@ -131,3 +131,19 @@ button:hover {
   height: 1px;
   width: 1px;
 }
+.hidden-iframe {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  z-index: -1000;
+}
+
+#submitBtn {
+  transition: all 0.3s;
+}
+
+#submitBtn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
