@@ -1,107 +1,136 @@
-// ============== إعدادات النموذج ============== //
+// ============ إعدادات النموذج ============ //
 const FORM_ID = "1FAIpQLSd67IldHl6-unSyGjmGrAE4k1X7Q0b-jMFCQ8rPWz9TRY9B3g";
 const QUESTION_ID = "2071403553";
 
-// ============== الدوال الرئيسية ============== //
+// ============ الدوال الرئيسية ============ //
 async function submitQuestion() {
     const questionInput = document.getElementById('userQuestion');
     const question = questionInput.value.trim();
     
-    // التحقق من إدخال السؤال
     if (!question) {
-        showMessage("الرجاء كتابة سؤال أولاً!", "error");
+        showResponse("❗ الرجاء كتابة سؤال قبل الإرسال", "error");
         return;
     }
 
-    // عرض حالة التحميل
-    showLoadingState();
+    showLoading();
     
     try {
-        // إرسال البيانات عبر Proxy
+        // المحاولة الأولى: إرسال عبر Proxy
         await sendViaProxy(question);
         
-        // عرض إجابات تجريبية (سيتم استبدالها بالإجابات الذكية لاحقاً)
-        simulateAIResponse();
-        
-        // مسح حقل الإدخال بعد الإرسال
+        // عرض النتيجة
+        showSuccessResponse();
         questionInput.value = "";
         
-    } catch (error) {
-        console.error("Error:", error);
-        showMessage("حدث خطأ في الإرسال. الرجاء المحاولة لاحقاً", "error");
+    } catch (firstError) {
+        console.error("المحاولة الأولى فشلت:", firstError);
+        try {
+            // المحاولة الثانية: إرسال مباشر
+            await sendDirect(question);
+            showSuccessResponse();
+            questionInput.value = "";
+            
+        } catch (secondError) {
+            console.error("المحاولة الثانية فشلت:", secondError);
+            showResponse(`
+                فشل الإرسال بسبب قيود الشبكة.<br>
+                جرب:<br>
+                1. استخدام VPN<br>
+                2. تحديث الصفحة<br>
+                3. المحاولة لاحقاً
+            `, "error");
+        }
     }
 }
 
-// ============== دوال المساعدة ============== //
+// ============ طرق الإرسال ============ //
 async function sendViaProxy(question) {
-    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
-    const formData = new URLSearchParams();
-    formData.append(`entry.${QUESTION_ID}`, question);
-
-    const response = await fetch(proxyUrl + formUrl, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-Requested-With": "XMLHttpRequest"
-        },
-        body: formData
-    });
+    const proxies = [
+        "https://cors-anywhere.herokuapp.com/",
+        "https://proxy.cors.sh/",
+        "https://api.allorigins.win/raw?url="
+    ];
     
-    if (!response.ok) throw new Error("فشل الإرسال");
+    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+    const formData = `entry.${QUESTION_ID}=${encodeURIComponent(question)}`;
+    
+    // تجربة جميع Proxies المتاحة
+    for (const proxy of proxies) {
+        try {
+            const response = await fetch(proxy + formUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: formData,
+                timeout: 5000
+            });
+            
+            if (response.ok) return;
+        } catch (e) {
+            console.log(`Proxy ${proxy} فشل:`, e);
+        }
+    }
+    
+    throw new Error("جميع Proxies فشلت");
 }
 
-function simulateAIResponse() {
+async function sendDirect(question) {
+    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+    const formData = `entry.${QUESTION_ID}=${encodeURIComponent(question)}`;
+    
+    await fetch(formUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+    });
+}
+
+// ============ عرض النتائج ============ //
+function showLoading() {
+    document.getElementById('logicalAnswer').innerHTML = `
+        <div class="loading">
+            <h3>🌐 جاري الاتصال بالخوادم...</h3>
+            <div class="loader"></div>
+            <p>هذه العملية قد تستغرق بضع ثواني</p>
+        </div>
+    `;
+    document.getElementById('poeticAnswer').innerHTML = "";
+}
+
+function showSuccessResponse() {
     document.getElementById('logicalAnswer').innerHTML = `
         <h3>🤖 تحليل DeepSeek-R1:</h3>
-        <p>"هذا النموذج الأولي. الإجابات الذكية الحقيقية قريباً!"</p>
-        <p class="small">(جرب تحديث الصفحة لمشاهدة تغييرات الكود الجديد)</p>
+        <p>"تم استلام سؤالك بنجاح! جاري تحضير التحليل الكامل..."</p>
+        <p class="small">(هذه إجابة تجريبية، جرب سؤالاً مختلفاً)</p>
     `;
     
     document.getElementById('poeticAnswer').innerHTML = `
         <h3>🌹 تأمل Qwen:</h3>
-        <p>"كل بداية تحتاج إلى صبر.. وشغف.. وإرادة"</p>
+        <p>"الحكمة تبدأ بالسؤال، وترتقي بالتفكر"</p>
     `;
 }
 
-function showLoadingState() {
-    document.getElementById('logicalAnswer').innerHTML = `
-        <div class="loading">
-            <h3>📡 جاري معالجة السؤال...</h3>
-            <div class="loader"></div>
-            <p>يتم الآن تحويل السؤال إلى خوادمنا</p>
-        </div>
-    `;
+function showResponse(message, type) {
+    const answerDiv = document.getElementById('logicalAnswer');
     
-    document.getElementById('poeticAnswer').innerHTML = `
-        <div class="loading">
-            <h3>🧠 جاري توليد التأمل...</h3>
-            <div class="loader"></div>
-        </div>
-    `;
-}
-
-function showMessage(message, type) {
-    const color = type === "error" ? "#ff4b4b" : "#4b3bff";
-    const answerDivs = document.querySelectorAll('.answer-box');
-    
-    answerDivs.forEach(div => {
-        div.innerHTML = `
-            <p style="color: ${color}; padding: 10px; 
-               background: ${type === "error" ? "#ffecec" : "#f0f5ff"};
-               border-radius: 5px;">
-                ${message}
-            </p>
+    if (type === "error") {
+        answerDiv.innerHTML = `
+            <div class="error">
+                <h3>❌ حدث خطأ</h3>
+                <p>${message}</p>
+            </div>
         `;
-    });
+        document.getElementById('poeticAnswer').innerHTML = "";
+    }
 }
 
-// ============== تهيئة الأحداث ============== //
+// ============ تفعيل الأحداث ============ //
 document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.querySelector('button');
     submitBtn.addEventListener('click', submitQuestion);
     
-    // تفعيل إرسال السؤال بالضغط على Enter
     document.getElementById('userQuestion').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') submitQuestion();
     });
