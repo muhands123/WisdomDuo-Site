@@ -114,3 +114,13 @@ button:hover {
     margin-top: 10px;
     display: block;
 }
+.disabled {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.retry-notice {
+    font-size: 0.9em;
+    color: #ff9800;
+    margin-top: 10px;
+}
