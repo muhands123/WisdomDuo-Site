@@ -102,3 +102,15 @@ button:hover {
         font-size: 24px;
     }
 }
+#userQuestion:focus {
+    border-color: #4b3bff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(75, 59, 255, 0.2);
+}
+
+.small {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 10px;
+    display: block;
+}
