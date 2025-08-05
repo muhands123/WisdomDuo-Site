@@ -124,3 +124,10 @@ button:hover {
     color: #ff9800;
     margin-top: 10px;
 }
+.hidden-tracker {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  height: 1px;
+  width: 1px;
+}
