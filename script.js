@@ -1,112 +1,50 @@
-import { FORM_ID, QUESTION_ID, API_URL } from './config.js';
+import { FORM_ID, QUESTION_ID } from './config.js';
 
-// ============ متغيرات عامة ============ //
-let isProcessing = false;
+// تحسينات جديدة:
+document.getElementById('userQuestion').focus(); // تركيز تلقائي على حقل السؤال
 
-// ============ دوال المساعدة ============ //
-function showLoading() {
-    document.getElementById('logicalAnswer').innerHTML = `
-        <div class="loading">
-            <h3>⚡ جاري المعالجة</h3>
-            <div class="loader"></div>
-            <p>قد يستغرق هذا بضع ثواني</p>
-        </div>
-    `;
-    document.getElementById('poeticAnswer').innerHTML = "";
-}
-
-function showError(message) {
-    document.getElementById('logicalAnswer').innerHTML = `
-        <div class="error">
-            <h3>❌ حدث خطأ</h3>
-            <p>${message}</p>
-        </div>
-    `;
-    document.getElementById('poeticAnswer').innerHTML = "";
-}
-
-function showResponse(logical, poetic) {
-    document.getElementById('logicalAnswer').innerHTML = logical;
-    document.getElementById('poeticAnswer').innerHTML = poetic;
-}
-
-async function saveQuestionToForms(question) {
-    const proxies = [
-        "https://corsproxy.io/?",
-        "https://api.allorigins.win/raw?url=",
-        "https://thingproxy.freeboard.io/fetch/"
-    ];
-
-    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
-    const formData = `entry.${QUESTION_ID}=${encodeURIComponent(question)}`;
-
-    for (const proxy of proxies) {
-        try {
-            const response = await fetch(`${proxy}${formUrl}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: formData,
-                timeout: 10000
-            });
-            if (response.ok) return true;
-        } catch (e) {
-            console.error(`Proxy ${proxy} failed:`, e);
-        }
-    }
-    throw new Error("فشل في حفظ السؤال");
-}
-
-// ============ الدالة الرئيسية ============ //
 async function handleSubmit() {
-    if (isProcessing) return;
+    const questionInput = document.getElementById('userQuestion');
+    const question = questionInput.value.trim();
     
-    const question = document.getElementById('userQuestion').value.trim();
-    
+    // تحقق محسن من السؤال الفارغ
     if (!question) {
-        showError("الرجاء كتابة سؤال قبل الإرسال");
+        showError("❗ يرجى كتابة سؤال قبل الإرسال");
+        questionInput.focus();
         return;
     }
 
-    isProcessing = true;
     showLoading();
-
+    
     try {
-        // 1. حفظ السؤال في Google Forms
-        await saveQuestionToForms(question);
+        // 1. محاولة الإرسال بدون Proxy أولاً
+        await sendToGoogleFormsDirect(question);
         
-        // 2. محاكاة الإجابة من الذكاء الاصطناعي (ستستبدل بالاتصال الحقيقي لاحقاً)
-        const logicalAnswer = `
-            <h3>🤖 تحليل DeepSeek-R1:</h3>
-            <p>"لقد تلقينا سؤالك عن <strong>${question}</strong> وسنقدم الإجابة الكاملة قريباً"</p>
-            <p class="small">(هذه إجابة تجريبية، جرب سؤالاً مختلفاً)</p>
-        `;
+        // 2. عرض إجابة تجريبية محسنة
+        showResponse(
+            `📊 <b>تحليل DeepSeek-R1:</b><br>"${question}" سؤال عميق. جاري تحليل الجوانب الفلسفية...`,
+            `🌹 <b>تأمل Qwen:</b><br>"في أعماق السؤال تكمن الإجابة.. ربما نحتاج فقط إلى التأمل"`
+        );
         
-        const poeticAnswer = `
-            <h3>🌹 تأمل Qwen:</h3>
-            <p>"وراء كل سؤال حكاية، وتحت كل كلمة أسرار"</p>
-            <p>"${question}... بداية رحلة بحث عن المعنى"</p>
-        `;
-        
-        // 3. عرض النتيجة
-        showResponse(logicalAnswer, poeticAnswer);
+        questionInput.value = ""; // مسح السؤال بعد الإرسال
         
     } catch (error) {
         console.error("Error:", error);
-        showError("حدث خطأ في الإرسال. الرجاء المحاولة لاحقاً");
-    } finally {
-        isProcessing = false;
+        showError("🔄 فشل الإرسال. جرب تحديث الصفحة أو المحاولة لاحقاً");
     }
 }
 
-// ============ تفعيل الأحداث ============ //
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('button').addEventListener('click', handleSubmit);
-    document.getElementById('userQuestion').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSubmit();
-        }
+// إرسال مباشر (بدون Proxy)
+async function sendToGoogleFormsDirect(question) {
+    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+    const formData = new FormData();
+    formData.append(`entry.${QUESTION_ID}`, question);
+
+    await fetch(formUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
     });
-});
+}
+
+// ... (ابقى دوال showLoading و showResponse و showError كما هي)
