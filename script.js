@@ -1,63 +1,64 @@
-// config.js
-const CONFIG = {
-  FORM_ID: "1FAIpQLSd67IldHl6-unSyGjmGrAE4k1X7Q0b-jMFCQ8rPWz9TRY9B3g",
-  QUESTION_ID: "2071403553"
-};
+import { CONFIG } from './config.js';
 
-// script.js
+class FormSubmitter {
+  constructor() {
+    this.retryCount = 0;
+    this.MAX_RETRIES = 3;
+  }
+
+  async submit(question) {
+    try {
+      await this._sendWithIframe(question);
+    } catch (error) {
+      console.warn("الطريقة الأولى فشلت، جرب الطريقة الاحتياطية...");
+      await this._sendWithPixel(question);
+    }
+  }
+
+  _sendWithIframe(question) {
+    return new Promise((resolve) => {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = this._buildFormUrl(question);
+      iframe.onload = resolve;
+      document.body.appendChild(iframe);
+      setTimeout(() => iframe.remove(), 5000);
+    });
+  }
+
+  _sendWithPixel(question) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = this._buildFormUrl(question);
+      img.onload = resolve;
+    });
+  }
+
+  _buildFormUrl(question) {
+    const params = new URLSearchParams();
+    params.set(CONFIG.FIELD_IDS.QUESTION, question);
+    params.set(CONFIG.FIELD_IDS.TIMESTAMP, new Date().toISOString());
+    
+    return `https://docs.google.com/forms/d/e/${CONFIG.FORM_ID}/formResponse?${params.toString()}`;
+  }
+}
+
+// الاستخدام
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const question = document.getElementById('userQuestion').value.trim();
   
   if (!question) {
-    showError("❗ اكتب سؤالاً واضحاً");
+    showError("❗ يرجى إدخال سؤال صحيح");
     return;
   }
 
   showLoading();
   
   try {
-    // الطريقة الأكثر موثوقية حالياً
-    await sendQuestion(question);
-    showResponse(question);
+    const submitter = new FormSubmitter();
+    await submitter.submit(question);
+    showSuccess(question);
   } catch (error) {
-    console.error("Error:", error);
-    showError("🔄 حدث خطأ غير متوقع. جرب مرة أخرى");
+    showError("⚠️ فشل الإرسال. يرجى المحاولة لاحقاً");
   }
 });
-
-// ========== التقنيات الجديدة ========== //
-async function sendQuestion(question) {
-  // التقنية 1: استخدام iframe خفي
-  await sendViaHiddenIframe(question);
-  
-  // التقنية 2: fallback إلى Image Pixel
-  await sendViaImagePixel(question);
-}
-
-function sendViaHiddenIframe(question) {
-  return new Promise((resolve) => {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `https://docs.google.com/forms/d/e/${CONFIG.FORM_ID}/viewform?` +
-                 `entry.${CONFIG.QUESTION_ID}=${encodeURIComponent(question)}` +
-                 `&submit=Submit`;
-    iframe.onload = resolve;
-    document.body.appendChild(iframe);
-    setTimeout(() => iframe.remove(), 3000);
-  });
-}
-
-function showResponse(question) {
-  document.getElementById('logicalAnswer').innerHTML = `
-    <h3>🤖 تحليل DeepSeek-R1:</h3>
-    <p>"تم استلام سؤالك '<strong>${question}</strong>' بنجاح!"</p>
-    <p class="small">(الإجابات الذكية الكاملة ستكون متاحة بعد الترقية القادمة)</p>
-  `;
-  
-  document.getElementById('poeticAnswer').innerHTML = `
-    <h3>🌹 تأمل Qwen:</h3>
-    <p>"كل سؤال هو بداية رحلة بحث..."</p>
-  `;
-}
-
-// ... (أبقى دوال showLoading و showError كما هي)
