@@ -1,50 +1,58 @@
 import { FORM_ID, QUESTION_ID } from './config.js';
 
-// تحسينات جديدة:
-document.getElementById('userQuestion').focus(); // تركيز تلقائي على حقل السؤال
+// تحسينات إضافية
+const MAX_RETRIES = 3;
+let retryCount = 0;
 
 async function handleSubmit() {
     const questionInput = document.getElementById('userQuestion');
     const question = questionInput.value.trim();
     
-    // تحقق محسن من السؤال الفارغ
     if (!question) {
-        showError("❗ يرجى كتابة سؤال قبل الإرسال");
+        showError("❗ يرجى كتابة سؤال واضح");
         questionInput.focus();
         return;
     }
 
     showLoading();
-    
+    disableForm();
+
     try {
-        // 1. محاولة الإرسال بدون Proxy أولاً
-        await sendToGoogleFormsDirect(question);
-        
-        // 2. عرض إجابة تجريبية محسنة
-        showResponse(
-            `📊 <b>تحليل DeepSeek-R1:</b><br>"${question}" سؤال عميق. جاري تحليل الجوانب الفلسفية...`,
-            `🌹 <b>تأمل Qwen:</b><br>"في أعماق السؤال تكمن الإجابة.. ربما نحتاج فقط إلى التأمل"`
-        );
-        
-        questionInput.value = ""; // مسح السؤال بعد الإرسال
-        
+        await retrySubmission(question);
+        showSuccessResponse(question);
+        questionInput.value = "";
     } catch (error) {
-        console.error("Error:", error);
-        showError("🔄 فشل الإرسال. جرب تحديث الصفحة أو المحاولة لاحقاً");
+        console.error("فشل الإرسال بعد المحاولات:", error);
+        showError("🔧 جرب استخدام VPN أو تحديث الصفحة");
+    } finally {
+        enableForm();
     }
 }
 
-// إرسال مباشر (بدون Proxy)
-async function sendToGoogleFormsDirect(question) {
-    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
-    const formData = new FormData();
-    formData.append(`entry.${QUESTION_ID}`, question);
-
-    await fetch(formUrl, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
-    });
+async function retrySubmission(question) {
+    while (retryCount < MAX_RETRIES) {
+        try {
+            await submitWithFallback(question);
+            return;
+        } catch (err) {
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+    }
+    throw new Error("فشل بعد 3 محاولات");
 }
 
-// ... (ابقى دوال showLoading و showResponse و showError كما هي)
+async function submitWithFallback(question) {
+    // المحاولة الأولى: إرسال مباشر
+    try {
+        await sendToGoogleFormsDirect(question);
+        return;
+    } catch (directError) {
+        console.log("المحاولة المباشرة فشلت، جرب Proxy...");
+    }
+    
+    // المحاولة الثانية: استخدام Proxy
+    await sendViaProxy(question);
+}
+
+// ... (أبقى الدوال الأخرى كما هي مع إضافة دوال disableForm/enableForm)
