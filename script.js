@@ -1,87 +1,47 @@
-// ============== إعدادات النموذج ============== //
-const FORM_ID = "ABC123DEF"; // استبدل بهذا - الجزء بعد forms.gle/
-const QUESTION_ID = "1234567890"; // استبدل بهذا - من استعلامات التحرير
+// إعدادات النموذج - استخدم هذه القيم كما هي
+const FORM_ID = "1FAIpQLSd67IldHl6-unSyGjmGrAE4k1X7Q0b-jMFCQ8rPWz9TRY9B3g";
+const QUESTION_ID = "2071403553";
 
-// ============== الدوال الرئيسية ============== //
 async function submitQuestion() {
-    const questionInput = document.getElementById('userQuestion');
-    const question = questionInput.value.trim();
-    
-    // التحقق من إدخال السؤال
-    if (!question) {
-        showError("الرجاء كتابة سؤال أولاً!");
-        return;
-    }
+  const question = document.getElementById('userQuestion').value.trim();
+  
+  if (!question) {
+    alert("⛔ الرجاء كتابة سؤال قبل الإرسال!");
+    return;
+  }
 
+  try {
     // عرض حالة التحميل
-    showLoadingState();
-    
-    try {
-        // إرسال البيانات إلى Google Forms
-        await sendToGoogleForms(question);
-        
-        // عرض رسالة النجاح
-        showSuccessMessage();
-        
-        // مسح حقل الإدخال بعد الإرسال
-        questionInput.value = "";
-        
-    } catch (error) {
-        console.error("Error:", error);
-        showError("حدث خطأ أثناء الإرسال. الرجاء المحاولة لاحقاً.");
-    }
-}
+    document.getElementById('logicalAnswer').innerHTML = `
+      <div class="loading">
+        <h3>📡 جاري إرسال سؤالك...</h3>
+        <div class="loader"></div>
+      </div>
+    `;
 
-// ============== دوال المساعدة ============== //
-async function sendToGoogleForms(question) {
-    const formData = new URLSearchParams();
-    formData.append(`entry.${QUESTION_ID}`, question);
-    
+    // إرسال البيانات إلى Google Forms
     await fetch(`https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
+      method: "POST",
+      mode: "no-cors",
+      body: new URLSearchParams({
+        [`entry.${QUESTION_ID}`]: question
+      })
     });
-}
 
-function showLoadingState() {
+    // رسالة النجاح
     document.getElementById('logicalAnswer').innerHTML = `
-        <div class="loading">
-            <h3>📊 جاري معالجة سؤالك...</h3>
-            <p>DeepSeek-R1 يقوم بتحليل السؤال</p>
-            <div class="loader"></div>
-        </div>
+      <h3>✅ تم استلام سؤالك بنجاح!</h3>
+      <p>سيصلك الرد قريباً...</p>
     `;
     
-    document.getElementById('poeticAnswer').innerHTML = `
-        <div class="loading">
-            <h3>🌌 Qwen يعد تأملاً فريداً...</h3>
-            <div class="loader"></div>
-        </div>
-    `;
-}
+    // مسح حقل الإدخال
+    document.getElementById('userQuestion').value = "";
 
-function showSuccessMessage() {
+  } catch (error) {
     document.getElementById('logicalAnswer').innerHTML = `
-        <h3>✅ تمت المعالجة!</h3>
-        <p>إجابة DeepSeek-R1 المنطقية ستظهر هنا قريباً</p>
+      <h3>❌ حدث خطأ!</h3>
+      <p>جرب مرة أخرى أو تحدث إلى الدعم</p>
     `;
-    
-    document.getElementById('poeticAnswer').innerHTML = `
-        <h3>🌸 التأمل جاهز!</h3>
-        <p>إجابة Qwen الشعرية ستظهر هنا قريباً</p>
-    `;
+    console.error("Error:", error);
+  }
 }
-
-function showError(message) {
-    const answerDivs = document.querySelectorAll('.answer-box');
-    answerDivs.forEach(div => {
-        div.innerHTML = `<p class="error">${message}</p>`;
-    });
-}
-
-// ============== تهيئة الأحداث ============== //
-document.addEventListener('DOMContentLoaded', () => {
-    const submitBtn = document.querySelector('button');
-    submitBtn.addEventListener('click', submitQuestion);
-});
