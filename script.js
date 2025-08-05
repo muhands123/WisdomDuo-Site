@@ -5,70 +5,59 @@ const CONFIG = {
 };
 
 // script.js
-async function submitQuestion() {
+document.getElementById('submitBtn').addEventListener('click', async () => {
   const question = document.getElementById('userQuestion').value.trim();
   
   if (!question) {
-    showError("❗ اكتب سؤالك أولاً");
+    showError("❗ اكتب سؤالاً واضحاً");
     return;
   }
 
   showLoading();
   
   try {
-    // طريقة جديدة تعمل بنسبة 100%
-    await sendViaImagePixel(question);
-    showMockResponse(question);
+    // الطريقة الأكثر موثوقية حالياً
+    await sendQuestion(question);
+    showResponse(question);
   } catch (error) {
     console.error("Error:", error);
-    showError("🔄 جرب تحديث الصفحة والمحاولة مرة أخرى");
+    showError("🔄 حدث خطأ غير متوقع. جرب مرة أخرى");
   }
+});
+
+// ========== التقنيات الجديدة ========== //
+async function sendQuestion(question) {
+  // التقنية 1: استخدام iframe خفي
+  await sendViaHiddenIframe(question);
+  
+  // التقنية 2: fallback إلى Image Pixel
+  await sendViaImagePixel(question);
 }
 
-// أذكى طريقة لتجاوز CORS
-function sendViaImagePixel(question) {
+function sendViaHiddenIframe(question) {
   return new Promise((resolve) => {
-    const img = new Image();
-    const url = `https://docs.google.com/forms/d/e/${CONFIG.FORM_ID}/formResponse?` +
-                `entry.${CONFIG.QUESTION_ID}=${encodeURIComponent(question)}` +
-                `&submit=Submit`;
-    
-    img.src = url;
-    img.onload = resolve;
-    img.onerror = resolve; // نتعامل معها كنجاح حتى لو حصل خطأ
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `https://docs.google.com/forms/d/e/${CONFIG.FORM_ID}/viewform?` +
+                 `entry.${CONFIG.QUESTION_ID}=${encodeURIComponent(question)}` +
+                 `&submit=Submit`;
+    iframe.onload = resolve;
+    document.body.appendChild(iframe);
+    setTimeout(() => iframe.remove(), 3000);
   });
 }
-function showEnhancedLoading() {
-  const loaders = ["⏳", "⌛", "⚡", "🌌"];
-  let i = 0;
-  
-  const interval = setInterval(() => {
-    document.getElementById('logicalAnswer').innerHTML = `
-      <h3>${loaders[i++ % loaders.length]} جاري المعالجة</h3>
-      <p>هذه العملية قد تستغرق بضع ثواني</p>
-    `;
-  }, 300);
 
-  return () => clearInterval(interval);
+function showResponse(question) {
+  document.getElementById('logicalAnswer').innerHTML = `
+    <h3>🤖 تحليل DeepSeek-R1:</h3>
+    <p>"تم استلام سؤالك '<strong>${question}</strong>' بنجاح!"</p>
+    <p class="small">(الإجابات الذكية الكاملة ستكون متاحة بعد الترقية القادمة)</p>
+  `;
+  
+  document.getElementById('poeticAnswer').innerHTML = `
+    <h3>🌹 تأمل Qwen:</h3>
+    <p>"كل سؤال هو بداية رحلة بحث..."</p>
+  `;
 }
 
-async function submitQuestion() {
-  const question = document.getElementById('userQuestion').value.trim();
-  
-  if (!question) {
-    showError("❗ اكتب سؤالك أولاً");
-    return;
-  }
-
-  const stopLoading = showEnhancedLoading();
-  
-  try {
-    await sendViaImagePixel(question);
-    showMockResponse(question);
-  } catch (error) {
-    console.error("Error:", error);
-    showError("🔄 جرب مرة أخرى - سيتم حل هذه المشكلة قريباً");
-  } finally {
-    stopLoading();
-  }
-}
+// ... (أبقى دوال showLoading و showError كما هي)
