@@ -3,16 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>معلومات مجانية</title>
-  <!-- CSS -->
+  <title>معلومات مجانية | Free Info Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="01_assets/01_css/01_main.css">
   <link rel="stylesheet" href="01_assets/01_css/02_modules/01_habits.css">
   <link rel="stylesheet" href="01_assets/01_css/02_modules/02_titles.css">
   <link rel="stylesheet" href="01_assets/01_css/02_modules/03_points.css">
 </head>
-<body>
-  <header><!-- المحتوى --></header>
-  <main class="container"><!-- المحتوى --></main>
-  <script src="01_assets/02_js/01_app.js" type="module"></script>
+<body lang="ar" dir="rtl">
+  <div id="celebration-effect" class="celebration" style="display:none"></div>
+  
+  <header>
+    <h1>معلومات مجانية</h1>
+    <p>أدوات ذكاء اصطناعي مجانية لتحسين إنتاجيتك</p>
+  </header>
+
+  <div class="container">
+    <div class="tool-card">
+      <h2>🤖 مُولّد عناوين ذكي</h2>
+      <input type="text" id="topic" placeholder="اكتب موضوعًا هنا">
+      <button id="generate-titles-btn">ولّد العناوين</button>
+      <div id="titles-output"></div>
+    </div>
+
+    <div class="tool-card">
+      <h2>✅ عداد العادات</h2>
+      <div class="habit-input-container">
+        <input type="text" id="new-habit" placeholder="أضف عادة جديدة">
+        <button id="add-habit-btn">إضافة</button>
+      </div>
+      <div id="habits-list"></div>
+    </div>
+  </div>
+
+  <div class="points-system">
+    <div class="user-points">نقاطك: <span id="user-points">0</span></div>
+    <button id="leaderboard-btn">قائمة المتصدرين</button>
+    <div id="leaderboard" style="display:none;margin-top:10px">
+      <h3>أفضل 10 لاعبين</h3>
+      <div id="leaderboard-list"></div>
+    </div>
+  </div>
+
+  <script src="01_assets/02_js/02_modules/01_habitsSystem.js"></script>
+  <script src="01_assets/02_js/02_modules/02_titlesSystem.js"></script>
+  <script src="01_assets/02_js/02_modules/03_pointsSystem.js"></script>
+  <script src="01_assets/02_js/02_modules/04_leaderboard.js"></script>
+  <script src="01_assets/02_js/01_app.js"></script>
 </body>
 </html>
