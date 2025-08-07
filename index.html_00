@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>معلومات مجانية</title>
+  <!-- CSS -->
   <link rel="stylesheet" href="01_assets/01_css/01_main.css">
   <link rel="stylesheet" href="01_assets/01_css/02_modules/01_habits.css">
   <link rel="stylesheet" href="01_assets/01_css/02_modules/02_titles.css">
+  <link rel="stylesheet" href="01_assets/01_css/02_modules/03_points.css">
 </head>
 <body>
-  <!-- المحتوى الأساسي -->
+  <header><!-- المحتوى --></header>
+  <main class="container"><!-- المحتوى --></main>
   <script src="01_assets/02_js/01_app.js" type="module"></script>
 </body>
 </html>
