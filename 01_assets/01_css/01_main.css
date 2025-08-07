@@ -1,0 +1,13 @@
+/* التنسيقات العامة */
+body {
+  font-family: 'Tajawal', sans-serif;
+  background: #f8f9fa;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
